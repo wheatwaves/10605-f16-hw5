@@ -36,6 +36,7 @@ class Autograd(object):
             for i in range(len(inputNames)):
                 if TRACE_BP: print ' -',dstName,'->',funName,'-> (...',inputNames[i],'...)'
                 result = (BP_FUNS[funName][i])(*values)
+                
                 # increment a running sum of all the delta's that are
                 # pushed back to the i-th parameter, initializing the
                 # zero if needed.

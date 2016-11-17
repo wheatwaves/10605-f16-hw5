@@ -178,7 +178,8 @@ class XMan(object):
         self._setupComplete = True
         # convenient return value so we can say net = FooNet().setup()
         return self
-
+#-----------------------------------------
+# No need to inspect
     def isParam(self,regName):
         """ Is the register with this name a parameter? """
         return self._registers[regName].role=='param'
@@ -190,7 +191,7 @@ class XMan(object):
     def isOpOutput(self,regName):
         """ Is the register with this name defined as the output of some operation?? """
         return self._registers[regName].role=='operationOutput'
-
+#-----------------------------------------
     def inputDict(self,**kw):
         """ Create dictionary to be passed to an eval routine, mapping
         register names to values, and adding default values for
