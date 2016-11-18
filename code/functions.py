@@ -62,21 +62,24 @@ def bp_crossEnt_softMax_O(delta, out, O, T):
             sum_v += exp(O[i][j]-a)
         sums[i] = sum_v
         for j in xrange(n):
-            P[i][j] = -log(exp(O[i][j]-a) / sum_v)
+            P[i][j] = exp(O[i][j]-a) / sum_v
     G = np.zeros((m, n))
+    # for i in xrange(m):
+    #     flag = -1
+    #     for j in xrange(n):
+    #         if T[i][j] == 1:
+    #             flag = j
+    #             break
+    #     flag_v = exp(O[i][flag]-a_val[i])
+    #     for j in xrange(n):
+    #         if j == flag:
+    #             G[i][j] = (delta / m) * (-1.0/P[i][j]) * ((flag_v*(sums[i]-flag_v))/(sums[i]*sums[i]))  
+    #         else:
+    #             exp_v = exp(O[i][j]-a_val[i])     
+    #             G[i][j] = (delta / m) * (-1.0/P[i][j]) * ((-flag_v*exp_v)/(sums[i]*sums[i]))
     for i in xrange(m):
-        flag = -1
         for j in xrange(n):
-            if T[i][j] == 1:
-                flag = j
-                break
-        flag_v = exp(O[i][flag]-a_val[i])
-        for j in xrange(n):
-            if j == flag:
-                G[i][j] = (delta / m) * (-1.0/P[i][j]) * ((flag_v*(sums[i]-flag_v))/(sums[i]*sums[i]))  
-            else:
-                exp_v = exp(O[i][j]-a_val[i])     
-                G[i][j] = (delta / m) * (-1.0/P[i][j]) * ((-flag_v*exp_v)/(sums[i]*sums[i]))
+            G[i][j] = (delta / m) * (P[i][j] - T[i][j])
     return G
 
 def bp_crossEnt_softMax_T(delta, out, O, T):
