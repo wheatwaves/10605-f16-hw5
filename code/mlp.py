@@ -68,11 +68,11 @@ def main(params):
            len(data.chardict), len(data.labeldict), shuffle=False)
 
     # build
-    print "building mlp..."
+    # print "building mlp..."
     mlp = MLP([max_len*mb_train.num_chars,num_hid,mb_train.num_labels])
     opseq = mlp.my_xman.operationSequence(mlp.my_xman.loss)
     autograd = Autograd(mlp.my_xman)
-    #TODO CHECK GRADIENTS HERE    
+    # #TODO CHECK GRADIENTS HERE    
     # print 'Wengart list:'
     # for (dstVarName, operator, inputVarNames) in opseq:
     #     print '  %s = %s(%s)' % (dstVarName,operator,(",".join(inputVarNames))) 
@@ -94,13 +94,13 @@ def main(params):
     #         print '------------------------'
     # return
     # train
-    print "training..."
     # get default data and params
     initDict = mlp.my_xman.inputDict()
     lr = init_lr
+    bestDict = {}
+    best_loss = 10000
     for i in range(epochs):
-        training_loss = []
-        print '----test-----'
+        training_loss, validation_loss = [], []
         for (idxs,e,l) in mb_train:
             #TODO prepare the input and do a fwd-bckwd pass over it and update the weights
             initDict['X'] = e.reshape(len(l), max_len*mb_train.num_chars)
@@ -111,26 +111,24 @@ def main(params):
             for rname in gradientDict:
                 if mlp.my_xman.isParam(rname):
                     initDict[rname] = initDict[rname] - lr*gradientDict[rname]
-        print i
-        print np.mean(np.array(training_loss))
-        print '------validate------'
+
         for (idxs,e,l) in mb_valid:
             #TODO prepare the input and do a fwd pass over it to compute the loss
             initDict['X'] = e.reshape(len(l), max_len*mb_train.num_chars)
             initDict['target'] = l
             valueDict = autograd.eval(opseq, initDict)
-            print i
-            print valueDict['loss']
-        print '-------------------'
+            validation_loss.append(valueDict['loss'])
+        loss = np.mean(validation_loss)
+        if loss < best_loss:
+            bestDict = initDict.copy()
         #TODO compare current validation loss to minimum validation loss
         # and store params if needed
 
     # print "done"
-    print '--- test ---'
     output_probabilities = []
     for (idxs,e,l) in mb_test:
-        initDict['X'] = e.reshape(len(l), max_len*mb_train.num_chars)
-        initDict['target'] = l
+        bestDict['X'] = e.reshape(len(l), max_len*mb_train.num_chars)
+        bestDict['target'] = l
         valueDict = autograd.eval(opseq, initDict)
         for i in valueDict['outputs']:
             for j in xrange(len(i)):
@@ -140,7 +138,6 @@ def main(params):
         
     #TODO save probabilities on test set
     # ensure that these are in the same order as the test input
-    print output_probabilities
     np.save(output_file, output_probabilities)
 
 if __name__=='__main__':

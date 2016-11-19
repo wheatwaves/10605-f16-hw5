@@ -10,60 +10,57 @@ def eval_mul(x1,x2):
     R = np.dot(x1, x2)
     return R
 def eval_relu(M):
-    m, n = len(M), len(M[0])
-    R = np.zeros((m,n))
-    for i in xrange(m):
-        for j in xrange(n):
-            if M[i][j] > 0:
-                R[i][j] = M[i][j]
-    return R
+    return M*(M>0)
 def bp_relu(delta, out, x):
-    m, n = len(x), len(x[0])
-    G = np.zeros((m,n))
-    for i in xrange(m):
-        for j in xrange(n):
-            if x[i][j] > 0:
-                G[i][j] = delta[i][j]
-    return G
+    return delta*(x>0)
 
 def eval_softMax(O):
-    m, n = len(O), len(O[0])
-    P = np.zeros((m,n))
-    for i in xrange(m):
-        a = O[i][0]
-        for j in xrange(n):
-            a = max(a, O[i][j])
-        sums = .0
-        for j in xrange(n):
-            sums += exp(O[i][j]-a)
-        for j in xrange(n):
-            P[i][j] = -log(exp(O[i][j]-a) / sums)
-    return P
-
+    # m, n = len(O), len(O[0])
+    # P = np.zeros((m,n))
+    # for i in xrange(m):
+    #     a = O[i][0]
+    #     for j in xrange(n):
+    #         a = max(a, O[i][j])
+    #     sums = .0
+    #     for j in xrange(n):
+    #         sums += exp(O[i][j]-a)
+    #     for j in xrange(n):
+    #         P[i][j] = -log(exp(O[i][j]-a) / sums)
+    # return P
+    # P = np.exp(O-np.max(O,axis=1))
+    assert len(O.shape) == 2
+    s = np.max(O, axis=1)
+    s = s[:, np.newaxis] 
+    e_x = np.exp(O - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis]
+    return e_x / div
 def eval_crossEnt(P, T):
-    m, n = len(P), len(P[0])
-    loss = np.zeros((m))
-    for i in xrange(m):
-        loss[i] = P[i].dot(np.transpose(T[i]))
-    return np.mean(loss)
+    return np.sum((-np.log(P))*T)/len(P)
 
 def bp_crossEnt_softMax_O(delta, out, O, T):
-    m, n = len(O), len(O[0])
-    P = np.zeros((m,n))
-    sums = np.zeros((m,))
-    a_val = np.zeros((m,))
-    for i in xrange(m):
-        a = O[i][0]
-        for j in xrange(n):
-            a = max(a, O[i][j])
-        a_val[i] = a
-        sum_v = .0
-        for j in xrange(n):
-            sum_v += exp(O[i][j]-a)
-        sums[i] = sum_v
-        for j in xrange(n):
-            P[i][j] = exp(O[i][j]-a) / sum_v
-    G = np.zeros((m, n))
+    # m, n = len(O), len(O[0])
+    # P = np.zeros((m,n))
+    # sums = np.zeros((m,))
+    # a_val = np.zeros((m,))
+    # for i in xrange(m):
+    #     a = O[i][0]
+    #     for j in xrange(n):
+    #         a = max(a, O[i][j])
+    #     a_val[i] = a
+    #     sum_v = .0
+    #     for j in xrange(n):
+    #         sum_v += exp(O[i][j]-a)
+    #     sums[i] = sum_v
+    #     for j in xrange(n):
+    #         P[i][j] = exp(O[i][j]-a) / sum_v
+    s = np.max(O, axis=1)
+    s = s[:, np.newaxis] 
+    e_x = np.exp(O - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis]
+    P = e_x / div
+    # G = np.zeros((m, n))
     # for i in xrange(m):
     #     flag = -1
     #     for j in xrange(n):
@@ -77,31 +74,77 @@ def bp_crossEnt_softMax_O(delta, out, O, T):
     #         else:
     #             exp_v = exp(O[i][j]-a_val[i])     
     #             G[i][j] = (delta / m) * (-1.0/P[i][j]) * ((-flag_v*exp_v)/(sums[i]*sums[i]))
-    for i in xrange(m):
-        for j in xrange(n):
-            G[i][j] = (delta / m) * (P[i][j] - T[i][j])
-    return G
-
+    # for i in xrange(m):
+    #     for j in xrange(n):
+    #         G[i][j] = (delta / m) * (P[i][j] - T[i][j])
+    # return G
+    return (delta/O.shape[0])*(P-T)
 def bp_crossEnt_softMax_T(delta, out, O, T):
-    m, n = len(O), len(O[0])
-    P = np.zeros((m,n))
-    for i in xrange(m):
-        a = O[i][0]
-        for j in xrange(n):
-            a = max(a, O[i][j])
-        sum = .0
-        for j in xrange(n):
-            sum += exp(O[i][j]-a)
-        for j in xrange(n):
-            P[i][j] = -log(exp(O[i][j]-a) / sum)
-    G = np.zeros((m,n))
-    for i in xrange(m):
-        for j in xrange(n):
-            if T[i][j] == 1:
-                G[i][j] = delta * P[i][j] / m
-    return G 
+    # m, n = len(O), len(O[0])
+    # P = np.zeros((m,n))
+    # for i in xrange(m):
+    #     a = O[i][0]
+    #     for j in xrange(n):
+    #         a = max(a, O[i][j])
+    #     sum = .0
+    #     for j in xrange(n):
+    #         sum += exp(O[i][j]-a)
+    #     for j in xrange(n):
+    #         P[i][j] = -log(exp(O[i][j]-a) / sum)
+    s = np.max(O, axis=1)
+    s = s[:, np.newaxis] 
+    e_x = np.exp(O - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis]
+    P = e_x / div
+    # G = np.zeros((m,n))
+    # for i in xrange(m):
+    #     for j in xrange(n):
+    #         if T[i][j] == 1:
+    #             G[i][j] = delta * P[i][j] / m
+    # return G 
+    return (delta/O.shape[0])*P*(T == 1)
+def eval_sigmoid(a):
+    return 1/(1+np.exp(-a))
+def bp_sigmoid(delta, out, O):
+    # m, n = len(delta), len(delta[0])
+    # G = np.zeros((m,n))
+    # for i in xrange(m):
+    #     for j in xrange(n):
+    #         G[i][j] = delta[i][j] * out[i][j] * (1 - out[i][j])
+    # return G
+    return delta * out * (1-out)
 
+def eval_tanh(a):
+    return (np.exp(a)-np.exp(-a))/(np.exp(a)+np.exp(-a))
 
+def bp_tanh(delta, out, O):
+    # m, n = len(delta), len(delta[0])
+    # G = np.zeros((m, n))
+    # for i in xrange(m):
+    #     for j in xrange(n):
+    #         G[i][j] = delta[i][j] * (1 - out[i][j] * out[i][j])
+    # return G
+    return delta*(1-out*out)
+
+def eval_element_dot(A, B):
+    return A * B
+def bp_element_dot_O(delta, out, O, T):
+    # m, n = len(O), len(O[0])
+    # G = np.zeros((m,n))
+    # for i in xrange(m):
+    #     for j in xrange(n):
+    #         G[i][j] = delta[i][j] * T[i][j]
+    # return G
+    return delta*T
+def bp_element_dot_T(delta, out, O, T):
+    # m, n = len(O), len(O[0])
+    # G = np.zeros((m,n))
+    # for i in xrange(m):
+    #     for j in xrange(n):
+    #         G[i][j] = delta[i][j] * O[i][j]
+    # return G
+    return delta*O
 class f(XManFunctions):
     @staticmethod
     def square(a):
@@ -115,6 +158,15 @@ class f(XManFunctions):
     @staticmethod
     def softMax(a):
         return XManFunctions.registerDefinedByOperator('softMax',a)
+    @staticmethod
+    def sigmoid(a):
+        return XManFunctions.registerDefinedByOperator('sigmoid',a)
+    @staticmethod
+    def element_dot(a, b):
+        return XManFunctions.registerDefinedByOperator('element_dot',a,b)
+    @staticmethod
+    def tanh(a):
+        return XManFunctions.registerDefinedByOperator('tanh',a)
     # TODO add other operation registers
 
 # the functions that autograd.eval will use to evaluate each function,
@@ -127,6 +179,9 @@ EVAL_FUNS = {
     'mul' : eval_mul, 
     'relu': eval_relu,
     'crossEnt': eval_crossEnt,
+    'sigmoid':eval_sigmoid,
+    'tanh':eval_tanh,
+    'element_dot': eval_element_dot,
     # TODO
     'softMax':  eval_softMax
     # TODO
@@ -160,6 +215,9 @@ BP_FUNS = {
     'square':           [lambda delta,out,x : delta * 2.0 * x],
     'relu': [bp_relu],
     'mul': [lambda delta,out,x1,x2:delta.dot(np.transpose(x2)), lambda delta,out,x1,x2:np.transpose(x1).dot(delta)],
+    'sigmoid': [bp_sigmoid],
+    'tanh': [bp_tanh],
+    'element_dot':[bp_element_dot_O, bp_element_dot_T],
     'crossEnt-softMax': [bp_crossEnt_softMax_O, bp_crossEnt_softMax_T]
      # TODO
     # TODO other operations
